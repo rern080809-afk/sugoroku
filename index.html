@@ -81,6 +81,42 @@ input.nameInput{width:100%;padding:13px;border:2px solid #eadde8;border-radius:1
  .app{padding:7px}.panel{border-radius:18px;padding:8px}.board{gap:4px;grid-auto-rows:56px}.cell{border-width:2px;border-radius:11px}.sidebar{grid-template-columns:1fr}
  .topBtns button{padding:7px 9px}
 }
+
+/* 円形すごろく盤 */
+.board{
+  position:relative !important;
+  width:min(92vw, 760px) !important;
+  height:min(92vw, 760px) !important;
+  max-width:760px !important;
+  max-height:760px !important;
+  margin:20px auto !important;
+  display:block !important;
+  border-radius:50% !important;
+  background:radial-gradient(circle at center, rgba(255,255,255,.96) 0 32%, rgba(255,240,248,.75) 33% 100%) !important;
+  border:8px solid rgba(255,160,205,.45) !important;
+  box-shadow:0 10px 35px rgba(255,120,180,.22), inset 0 0 30px rgba(255,255,255,.9) !important;
+}
+.board .cell{
+  position:absolute !important;
+  width:72px !important;
+  height:72px !important;
+  margin:0 !important;
+  transform:translate(-50%,-50%) !important;
+  border-radius:50% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  box-sizing:border-box !important;
+  z-index:2 !important;
+}
+.board .cell .piece{
+  position:absolute !important;
+  inset:auto !important;
+}
+@media (max-width:700px){
+  .board .cell{width:58px !important;height:58px !important;font-size:12px !important;}
+}
+
 </style>
 
 <style>
@@ -115,7 +151,7 @@ const AUDIO_DATA = {'step': 'data:audio/wav;base64,UklGRvoZAABXQVZFZm10IBAAAAABA
 <style id="landing-game-style">
 .cell:not(.start):not(.goal){cursor:pointer}
 .cell:not(.start):not(.goal):hover{transform:translateY(-2px);box-shadow:0 5px 14px rgba(255,87,157,.18)}
-.cell.goal{cursor:default}
+.cell.goal{cursor:pointer}
 </style>
 
 <style id="tablet-optimized-style">
@@ -187,13 +223,26 @@ button,.choice,.modeBtn,.action,.topBtns button{min-height:48px;touch-action:man
 @media (max-width:900px){.oneScreen{grid-template-columns:1.45fr .9fr}.gameHeader{gap:8px}.gameHeader .logo{font-size:20px}.headerInfo{font-size:12px;padding:8px 11px}.topBtns button{font-size:11px;padding:0 9px}.players{grid-template-columns:1fr}.playerRow{padding:6px}.cell{border-radius:11px}}@media (orientation:portrait) and (max-width:900px){.tabletApp{overflow:auto;height:auto;min-height:100dvh}.oneScreen{height:auto;grid-template-columns:1fr;grid-template-rows:minmax(420px,55dvh) auto}.controlPanel{grid-template-rows:auto minmax(430px,auto)}.board{min-height:420px}.gameHeader{position:sticky;top:0}.headerInfo{display:none}}
 </style></head>
 <body>
+
+<div id="numberMovePanel" style="margin:14px auto;max-width:520px;padding:16px;border-radius:22px;background:rgba(255,255,255,.94);box-shadow:0 6px 20px rgba(0,0,0,.10);text-align:center;">
+  <div style="font-size:18px;font-weight:700;margin-bottom:8px;">🎲 進むマス数</div>
+  <div style="display:flex;gap:10px;justify-content:center;align-items:center;">
+    <input id="moveNumber" type="number" min="1" value="1"
+      style="width:120px;font-size:24px;text-align:center;padding:10px;border:3px solid #ffb6d9;border-radius:14px;">
+    <button id="moveNumberBtn" type="button"
+      style="font-size:20px;font-weight:700;padding:11px 20px;border:0;border-radius:16px;background:#ff8fc5;color:white;box-shadow:0 4px 10px rgba(255,100,170,.25);">
+      ▶ 進む
+    </button>
+  </div>
+</div>
+
 <div class="app tabletApp">
 <header class="gameHeader">
   <div class="logo">ころころ♡すごろく <small>LIVE PARTY GAME</small></div>
   <div class="headerInfo"><span id="turnName">プレイヤー1</span> のターン</div>
   <div class="topBtns">
     <button class="soundBtn" id="bgmBtn" onclick="toggleBgm(this)">🎵 BGM OFF</button>
-    <button onclick="openSetup()">👥 メンバー</button>
+    <button onclick="openSetup()">🎀 プレイヤー</button>
     <button onclick="resetGame()">↻ リセット</button>
   </div>
 </header>
@@ -219,40 +268,46 @@ button,.choice,.modeBtn,.action,.topBtns button{min-height:48px;touch-action:man
     </section>
   </aside>
 </main>
-<div class="footer">ころころ♡すごろく LIVE ｜ タップだけで遊べるタブレット専用レイアウト</div>
+<div class="footer">ころころ♡すごろく LIVE ｜ ゴールなし・好きな数字で進めるタブレット専用レイアウト</div>
 </div>
 
 <div class="overlay show" id="startOverlay">
  <div class="modal startModal">
   <div class="startLogo">ころころ♡すごろく <span>LIVE</span></div>
-  <div class="startSub">タブレットで遊べるミニゲームすごろく</div>
-  <h2>👥 プレイヤーを選ぼう</h2>
-  <div class="countGrid">
-   <button class="countBtn" data-count="2" onclick="selectCount(2)">2人</button>
-   <button class="countBtn active" data-count="3" onclick="selectCount(3)">3人</button>
-   <button class="countBtn" data-count="4" onclick="selectCount(4)">4人</button>
-   <button class="countBtn" data-count="5" onclick="selectCount(5)">5人</button>
-   <button class="countBtn" data-count="6" onclick="selectCount(6)">6人</button>
-  </div>
-  <div id="startNames" class="startNames"></div>
-  <button class="startButton" onclick="startGame()">🚀 このメンバーでスタート！</button>
+  <div class="startSub">タブレットで遊べる・ゴールなしの無限すごろく</div>
+  <h2>🎀 プレイヤー</h2>
+  <div id="startNames" class="startNames"><input class="nameInput" id="startNamesName0" value="プレイヤー1" placeholder="プレイヤー名"></div>
+  <button class="startButton" onclick="startGame()">🚀 スタート！</button>
  </div>
 </div>
 
 <div class="overlay" id="setupOverlay">
  <div class="modal">
-  <h2>👥 プレイヤー設定</h2>
-  <div class="sub">人数と名前を変更できます</div>
-  <div class="countGrid" id="setupCounts"></div>
+  <h2>🎀 プレイヤー設定</h2>
+  <div class="sub">プレイヤーは1人固定です</div>
   <div id="nameInputs"></div>
-  <div class="actions"><button class="action" onclick="saveSetup()">このメンバーで遊ぶ</button><button class="action secondary" onclick="document.getElementById('setupOverlay').classList.remove('show')">キャンセル</button></div>
+  <div class="actions"><button class="action" onclick="saveSetup()">この名前で遊ぶ</button><button class="action secondary" onclick="document.getElementById('setupOverlay').classList.remove('show')">キャンセル</button></div>
  </div>
 </div>
 <script>
+
+function arrangeBoardCircle(){
+  const board=document.querySelector('.board');
+  if(!board) return;
+  const cells=[...board.querySelectorAll('.cell')];
+  const rect=board.getBoundingClientRect();
+  const cx=rect.width/2, cy=rect.height/2;
+  const radius=Math.min(rect.width,rect.height)*0.39;
+  cells.forEach((cell,i)=>{
+    const angle=(-Math.PI/2)+(i/cells.length)*Math.PI*2;
+    cell.style.left=(cx+Math.cos(angle)*radius)+'px';
+    cell.style.top=(cy+Math.sin(angle)*radius)+'px';
+  });
+}
+window.addEventListener('resize', arrangeBoardCircle);
+
 const COLORS=['p0','p1','p2','p3','p4','p5'];
-const state={players:[
- {name:'プレイヤー1',pos:0},{name:'プレイヤー2',pos:0},{name:'プレイヤー3',pos:0}
-],turn:0,boardSize:30};
+const state={players:[{name:'プレイヤー1',pos:0}],turn:0,boardSize:30};
 let wordTimer=null, wordScore=0;
 
 
@@ -278,13 +333,14 @@ function addSoundButton(){
   b.onclick=()=>toggleBgm(b);top.insertBefore(b,top.firstChild);
 }
 async function moveAnimated(n){
-  const p=state.players[state.turn];
-  const target=Math.min(state.boardSize-1,p.pos+n);
-  while(p.pos<target){
-    p.pos++; render(); playSound('step');
-    await new Promise(r=>setTimeout(r,180));
+  const p=state.players[0];
+  const steps=Math.max(0,Math.min(999,n));
+  for(let i=0;i<steps;i++){
+    p.pos=(p.pos+1)%state.boardSize;
+    render(); playSound('step');
+    await new Promise(r=>setTimeout(r,120));
   }
-  playSound(p.pos===state.boardSize-1?'win':'click');
+  playSound('click');
 }
 
 function render(){
@@ -299,9 +355,9 @@ function render(){
  for(let i=0;i<state.boardSize;i++){
    const game = i===0 ? null : miniGames[(i-1)%miniGames.length];
    const c=document.createElement('div');
-   c.className='cell '+(i===0?'start ':'')+(i===state.boardSize-1?'goal':'');
+   c.className='cell '+(i===0?'start ':'');
    c.dataset.game = game ? game.key : '';
-   c.innerHTML=`<span class="num">${i+1}</span>${i===0?'START':i===state.boardSize-1?'GOAL':
+   c.innerHTML=`<span class="num">${i+1}</span>${i===0?'START':
      `<span style="font-size:.9em">${game.icon}</span><br><span>${game.name}</span>`}`;
    state.players.forEach((p,idx)=>{
      if(p.pos===i){
@@ -318,10 +374,10 @@ function render(){
    `<div class="playerRow"><span class="dot ${COLORS[i]}"></span><span class="playerName">${escapeHtml(p.name)}</span><span class="pos">${p.pos+1}マス</span></div>`).join('');
 }
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function nextTurn(){state.turn=(state.turn+1)%state.players.length;render()}
+function nextTurn(){render()}
 function move(n){
- const p=state.players[state.turn];
- p.pos=Math.min(state.boardSize-1,p.pos+n);
+ const p=state.players[0];
+ p.pos=(p.pos+Math.max(0,Math.min(999,n)))%state.boardSize;
  render();
 }
 function openMini(type){
@@ -345,19 +401,26 @@ function startTurnGame(){
  openMini(keys[(p.pos-1)%keys.length]);
 }
 function closeMini(){document.getElementById('overlay').classList.remove('show');if(wordTimer)clearInterval(wordTimer)}
-async function finishMove(n){
- closeMini();
- await moveAnimated(n);
- const p=state.players[state.turn];
- if(p.pos===state.boardSize-1){
-   playSound('win');
-   setTimeout(()=>alert(`🎉 ${p.name} がゴール！おめでとう！`),250);
-   return;
- }
- // 移動が終わったらターン交代。
- nextTurn();
- // 次のプレイヤーは、現在いるマスに割り当てられたミニゲームを自動開始。
- setTimeout(()=>startTurnGame(),450);
+function finishMove(n){
+  const suggested=Math.max(0,Math.min(999,Number(n)||0));
+  document.getElementById('modalTitle').textContent='🚶 進むマス数を入力';
+  document.getElementById('modalSub').textContent='ミニゲーム終了！好きな数字で駒を進められます';
+  const area=document.getElementById('gameArea');
+  area.innerHTML=`<div class="bigResult">✨ ミニゲーム結果 ✨<br><span style="font-size:.65em">参考：${suggested}マス</span></div>
+    <div style="margin:14px 0 8px;font-weight:900">何マス進む？</div>
+    <input id="moveNumber" type="number" inputmode="numeric" min="0" max="999" value="${suggested}" style="width:100%;min-height:64px;border:3px solid #ffb5d3;border-radius:18px;text-align:center;font-size:32px;font-weight:1000;outline:none">
+    <button class="action" style="width:100%;margin-top:12px;min-height:58px;font-size:20px" onclick="applyMoveNumber()">🚀 この数字で進む</button>
+    <div style="margin-top:8px;font-size:12px;opacity:.65">0〜999まで入力OK。30マスを超えたら最初のマスに戻って続きます。</div>`;
+  setTimeout(()=>{const el=document.getElementById('moveNumber'); if(el){el.focus();el.select();}},50);
+}
+async function applyMoveNumber(){
+  const el=document.getElementById('moveNumber');
+  let n=Number(el?.value);
+  if(!Number.isFinite(n)) n=0;
+  n=Math.max(0,Math.min(999,Math.floor(n)));
+  closeMini();
+  await moveAnimated(n);
+  setTimeout(()=>startTurnGame(),350);
 }
 function showChohan(a){
  document.getElementById('modalTitle').textContent='🎴 丁半';
@@ -440,49 +503,32 @@ function saveSetup(){
 function resetGame(){if(confirm('ゲームを最初からやり直しますか？')){state.players.forEach(p=>p.pos=0);state.turn=0;render()}}
 
 // ===== タブレット版・ワン画面UI =====
-let selectedCount = 3;
+let selectedCount = 1;
 function makeNameInputs(containerId, count, source){
- const box=document.getElementById(containerId);
- box.innerHTML='';
- for(let i=0;i<count;i++){
-   const value=source && source[i] ? source[i].name : `プレイヤー${i+1}`;
-   box.insertAdjacentHTML('beforeend', `<input class="nameInput" id="${containerId}Name${i}" value="${escapeHtml(value)}" placeholder="プレイヤー${i+1}">`);
- }
-}
-function selectCount(n){
- selectedCount=n;
- document.querySelectorAll('#startOverlay .countBtn').forEach(b=>b.classList.toggle('active',Number(b.dataset.count)===n));
- makeNameInputs('startNames',n);
+ const box=document.getElementById(containerId); if(!box)return;
+ const value=source && source[0] ? source[0].name : (state.players[0]?.name||'プレイヤー1');
+ box.innerHTML=`<input class="nameInput" id="${containerId}Name0" value="${escapeHtml(value)}" placeholder="プレイヤー名">`;
 }
 function startGame(){
- const players=[];
- for(let i=0;i<selectedCount;i++){
-   const el=document.getElementById(`startNamesName${i}`);
-   players.push({name:(el.value.trim()||`プレイヤー${i+1}`),pos:0});
- }
- state.players=players; state.turn=0; render();
+ const el=document.getElementById('startNamesName0');
+ state.players=[{name:(el?.value.trim()||'プレイヤー1'),pos:0}];
+ state.turn=0; render();
  document.getElementById('startOverlay').classList.remove('show');
  setTimeout(()=>startTurnGame(),250);
 }
 function openSetup(){
- selectedCount=state.players.length;
- const box=document.getElementById('setupCounts');
- box.innerHTML=[2,3,4,5,6].map(n=>`<button class="countBtn ${n===selectedCount?'active':''}" onclick="changeSetupCount(${n})">${n}人</button>`).join('');
- renderSetupNames();
+ const box=document.getElementById('nameInputs');
+ box.innerHTML=`<input class="nameInput" id="setupName0" value="${escapeHtml(state.players[0]?.name||'プレイヤー1')}" placeholder="プレイヤー名">`;
  document.getElementById('setupOverlay').classList.add('show');
 }
-function changeSetupCount(n){selectedCount=n;document.querySelectorAll('#setupCounts .countBtn').forEach((b,i)=>b.classList.toggle('active',[2,3,4,5,6][i]===n));renderSetupNames()}
-function renderSetupNames(){
- const box=document.getElementById('nameInputs'); box.innerHTML='';
- for(let i=0;i<selectedCount;i++){const value=state.players[i]?.name||`プレイヤー${i+1}`;box.insertAdjacentHTML('beforeend',`<input class="nameInput" id="setupName${i}" value="${escapeHtml(value)}" placeholder="プレイヤー${i+1}">`)}
-}
 function saveSetup(){
- state.players=Array.from({length:selectedCount},(_,i)=>({name:(document.getElementById(`setupName${i}`).value.trim()||`プレイヤー${i+1}`),pos:0}));
- state.turn=0; render(); document.getElementById('setupOverlay').classList.remove('show'); startTurnGame();
+ const el=document.getElementById('setupName0');
+ state.players=[{name:(el?.value.trim()||'プレイヤー1'),pos:state.players[0]?.pos||0}];
+ state.turn=0; render(); document.getElementById('setupOverlay').classList.remove('show');
 }
-function resetGame(){
- if(confirm('ゲームを最初からやり直しますか？')){state.players.forEach(p=>p.pos=0);state.turn=0;render();startTurnGame();}
-}
+function resetGame(){if(confirm('ゲームを最初からやり直しますか？')){state.players[0].pos=0;state.turn=0;render();startTurnGame();}}
+
+
 function openMini(type){
  const p=state.players[state.turn];
  document.getElementById('modalSub').textContent=`${p.name} のターン｜結果で駒が進みます`;
@@ -531,3 +577,89 @@ render(); initAudio();
 </script>
 </body>
 </html>
+
+<script>
+setTimeout(arrangeBoardCircle, 100);
+</script>
+
+<script>
+/* 1人用固定 */
+document.addEventListener('DOMContentLoaded',()=>{
+  try{
+    if(window.state){
+      state.players=[{name:'プレイヤー1',pos:0}];
+      state.turn=0;
+    }
+    document.querySelectorAll('input[type="radio"], input[type="checkbox"], select').forEach(el=>{
+      const text=(el.parentElement?.innerText||'')+(el.value||'');
+      if(/2|3|4|5|6/.test(text) && /人/.test(text)) el.style.display='none';
+    });
+  }catch(e){}
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('moveNumberBtn');
+  const input=document.getElementById('moveNumber');
+  if(!btn || !input) return;
+
+  btn.addEventListener('click', async ()=>{
+    let n=parseInt(input.value,10);
+    if(!Number.isFinite(n) || n<1){
+      alert('1以上の数字を入力してね😊');
+      return;
+    }
+    n=Math.floor(n);
+
+    /* 現在のターンのゲームを閉じて、入力したマス数だけ移動 */
+    try{
+      if(typeof closeMini==='function') closeMini();
+      if(typeof moveAnimated==='function'){
+        await moveAnimated(n);
+      }else if(window.state && state.players && state.players[0]){
+        state.players[0].pos += n;
+        if(state.players[0].pos >= state.boardSize){
+          state.players[0].pos = state.boardSize-1;
+        }
+      }
+      if(typeof startTurnGame==='function'){
+        setTimeout(()=>startTurnGame(),450);
+      }
+    }catch(e){
+      console.error(e);
+    }
+  });
+
+  input.addEventListener('keydown',(e)=>{
+    if(e.key==='Enter') btn.click();
+  });
+});
+</script>
+
+
+<script>
+setTimeout(()=>{
+  const board=document.querySelector('.board');
+  if(!board) return;
+  const cells=[...board.querySelectorAll('.cell')];
+  const names=["丁半","チンチロリン","単語レース","ダービー","スクラッチ"];
+  cells.forEach((cell,i)=>{
+    if(i===0) {
+      cell.dataset.game="スタート";
+      const label=document.createElement('div');
+      label.textContent="START";
+      label.style.cssText="font-weight:800;font-size:12px;";
+      cell.appendChild(label);
+    } else {
+      const name=names[(i-1)%names.length];
+      cell.dataset.game=name;
+      const label=document.createElement('div');
+      label.textContent=name;
+      label.style.cssText="font-weight:800;font-size:11px;line-height:1.1;text-align:center;padding:2px;";
+      cell.appendChild(label);
+    }
+  });
+},200);
+</script>
